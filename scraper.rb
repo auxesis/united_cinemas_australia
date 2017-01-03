@@ -83,7 +83,7 @@ def fetch_sessions(id, date)
 end
 
 def dates
-  (Date.today..Date.today + 1).to_a.map(&:to_s)
+  (Date.today..Date.today + 6).to_a.map(&:to_s)
 end
 
 def primary_key
