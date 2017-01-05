@@ -78,6 +78,7 @@ def fetch_sessions(id, date)
 
   sessions = extract_sessions(page)
   sessions.each do |session|
+    session['location'] = id
     session['datetime'] = DateTime.parse(date + ' ' + session.delete('time'))
   end
 end
