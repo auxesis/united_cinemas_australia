@@ -96,7 +96,7 @@ def current_cinema_list
   }
 end
 
-def add_attribute_if_exists(attrs, attr, match)
+def add_attribute_if_match(attrs, attr, match)
   attrs[attr] = match if match
   attrs
 end
@@ -119,8 +119,8 @@ def extract_sessions(page)
         'running_time' => text[/Running Time: (\d+) minutes/, 1].to_i,
       }
 
-      add_attribute_if_exists(session, 'cast', text[/Cast:\s*(.+)/, 1])
-      add_attribute_if_exists(session, 'synopsis', text[/Synopsis:\s*(.+)/, 1])
+      add_attribute_if_match(session, 'cast', text[/Cast:\s*(.+)/, 1])
+      add_attribute_if_match(session, 'synopsis', text[/Synopsis:\s*(.+)/, 1])
     }
   }.flatten
 end
