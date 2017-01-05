@@ -120,10 +120,6 @@ def dates
   (Date.today..Date.today + 6).to_a.map(&:to_s)
 end
 
-def primary_key
-  %w(link)
-end
-
 def scrape_cinemas
   cinemas = current_cinema_list
   puts "[info] Scraped #{cinemas.size} cinemas"
