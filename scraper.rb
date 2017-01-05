@@ -144,7 +144,10 @@ def scrape_sessions(cinema, date)
 end
 
 def dates
-  (Date.today..Date.today + 6).to_a.map(&:to_s)
+  start  = ENV['MORPH_START_DATE']  ? Date.parse(ENV['MORPH_START_DATE']) : Date.today
+  finish = ENV['MORPH_FINISH_DATE'] ? Date.parse(ENV['MORPH_FINISH_DATE']) : Date.today + 6
+
+  (start..finish).to_a.map(&:to_s)
 end
 
 def scrape_cinemas
