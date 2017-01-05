@@ -43,15 +43,37 @@ rescue SqliteMagic::NoSuchTable
   []
 end
 
-def geocode(cinema)
-  # FIXME(auxesis): add address details
+def extract_address(cinema)
   page = get(cinema['link'])
-  script = page.search('script').find {|s| s.text =~ /google.maps.LatLng/ }.text
-  script.gsub("\r","\n")[/LatLng\((.*)\)\;/, 1].split(',').map(&:to_f)
+
+  well = page.search('div.well h3#session-details-title').first.parent.children
+  body = well.reject {|c| c.name == 'h3'}.map {|c| c.text.strip}
+  address = body.reject {|c| c.blank? || c =~ /^Phone/}.join(', ')
+  cinema['address'] = address
 end
 
-def timezone_from_location(lat,lng)
-  Timezone.lookup(lat,lng).name
+def extract_lat_lng(cinema)
+  page = get(cinema['link'])
+  script = page.search('script').find {|s| s.text =~ /google.maps.LatLng/}.text
+  lat, lng = script.gsub("\r","\n")[/LatLng\((.*)\)\;/, 1].split(',').map(&:to_f)
+  cinema['lat'], cinema['lng'] = lat, lng
+end
+
+def determine_timezone(cinema)
+  lat, lng = [ cinema['lat'], cinema['lng'] ]
+  cinema['timezone'] = Timezone.lookup(lat,lng).name
+end
+
+def extract_information(cinema)
+  page = get(cinema['link'])
+  tab  = page.search('div#information').children
+  cinema['information'] = ReverseMarkdown.convert(tab.search('p').to_s)
+end
+
+def extract_social(cinema)
+  page = get(cinema['link'])
+  tab = page.search('div#social').children
+  cinema['facebook'] = tab.search('div.fb-page').first['data-href']
 end
 
 def current_cinema_list
@@ -127,11 +149,12 @@ def scrape_cinemas
   new_cinemas = cinemas.select {|r| !existing_record_ids('cinemas').include?(r['link'])}
   puts "[info] There are #{new_cinemas.size} new cinemas"
 
-  new_cinemas.map! do |cinema|
-    puts "[debug] Geocoding #{cinema['name']}"
-    lat, lng = geocode(cinema)
-    timezone = timezone_from_location(lat,lng)
-    cinema.merge({'lat' => lat, 'lng' => lng, 'timezone' => timezone})
+  new_cinemas.each do |cinema|
+    extract_address(cinema)
+    extract_lat_lng(cinema)
+    determine_timezone(cinema)
+    extract_information(cinema)
+    extract_social(cinema)
   end
 
   ScraperWiki.save_sqlite(%w(link), new_cinemas, 'cinemas')
