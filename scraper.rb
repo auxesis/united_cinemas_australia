@@ -26,6 +26,7 @@ end
 def get(url)
   @mechanize_cache ||= {}
   @agent ||= Mechanize.new
+  @agent.history.max_size = 0
 
   if @mechanize_cache[url]
     puts "[debug] Requesting [cache hit] #{url}"
@@ -175,13 +176,18 @@ def main
   cinemas = scrape_cinemas
 
   sessions = []
+  threads = []
 
   cinemas.each do |cinema|
-    dates.each do |date|
-      puts "[info] Fetching sessions for #{cinema['name']} on #{date}"
-      sessions += scrape_sessions(cinema, date)
-    end
+    threads << Thread.new {
+      dates.each do |date|
+        puts "[info] Fetching sessions for #{cinema['name']} on #{date}"
+        sessions += scrape_sessions(cinema, date)
+      end
+    }
   end
+
+  threads.each(&:join)
 
   puts "[info] Scraped #{sessions.size} sessions across #{cinemas.size} cinemas"
   puts "[info] There are #{existing_record_ids('sessions').size} existing sessions"
