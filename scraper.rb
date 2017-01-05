@@ -134,7 +134,7 @@ def scrape_cinemas
     cinema.merge({'lat' => lat, 'lng' => lng, 'timezone' => timezone})
   end
 
-  ScraperWiki.save_sqlite(%w(id), new_cinemas, 'cinemas')
+  ScraperWiki.save_sqlite(%w(link), new_cinemas, 'cinemas')
 
   # Then return all records, regardless if new or old
   ScraperWiki.select('* from cinemas')
