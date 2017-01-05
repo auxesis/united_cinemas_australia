@@ -134,7 +134,7 @@ def scrape_sessions(cinema, date)
   sessions.each do |session|
     Time.zone = cinema['timezone']
     session['time'] = Time.zone.parse("#{date} #{session['time']}")
-    session['location'] = id
+    session['location'] = id # where the session is happening
   end
 end
 
