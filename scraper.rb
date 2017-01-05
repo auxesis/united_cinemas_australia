@@ -96,6 +96,12 @@ def current_cinema_list
   }
 end
 
+def add_attribute_if_exists(attrs, attr, regex)
+  match = text[regex, 1]
+  attrs[attr] = match if match
+  attrs
+end
+
 def extract_sessions(page)
   titles = page.search('tr').reject {|tr| tr.children.reject {|n| n.text? }.size == 0}
 
@@ -114,12 +120,8 @@ def extract_sessions(page)
         'running_time' => text[/Running Time: (\d+) minutes/, 1].to_i,
       }
 
-      cast = text[/Cast:\s*(.+)/, 1]
-      session['cast'] = cast if cast
-      synopsis = text[/Synopsis:\s*(.+)/, 1]
-      session['synopsis'] = synopsis if synopsis
-
-      session
+      add_attribute_if_exists(session, 'cast', /Cast:\s*(.+)/)
+      add_attribute_if_exists(session, 'synopsis', /Synopsis:\s*(.+)/)
     }
   }.flatten
 end
