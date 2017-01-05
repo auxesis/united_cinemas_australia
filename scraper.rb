@@ -37,8 +37,12 @@ def get(url)
 end
 
 def existing_record_ids(table)
-  return @cached if @cached
-  @cached = ScraperWiki.select("link from #{table}").map {|r| r['link']}
+  @cached ||= {}
+  if @cached[table]
+    return @cached[table]
+  else
+    @cached[table] = ScraperWiki.select("link from #{table}").map {|r| r['link']}
+  end
 rescue SqliteMagic::NoSuchTable
   []
 end
