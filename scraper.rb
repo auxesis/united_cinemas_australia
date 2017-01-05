@@ -119,7 +119,7 @@ def extract_sessions(page)
       session = {
         'link' => link,
         'time' => time,
-        'title' => title.search('b').text,
+        'title' => title.search('b').text.strip,
         'rating' => text[/Rating: (.+)/, 1],
         'running_time' => text[/Running Time: (\d+) minutes/, 1].to_i,
       }
