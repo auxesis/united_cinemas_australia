@@ -24,8 +24,16 @@ class String
 end
 
 def get(url)
+  @mechanize_cache ||= {}
   @agent ||= Mechanize.new
-  @agent.get(url)
+
+  if @mechanize_cache[url]
+    puts "[debug] Requesting [cache hit] #{url}"
+    return @mechanize_cache[url]
+  else
+    puts "[debug] Requesting #{url}"
+    @mechanize_cache[url] = @agent.get(url)
+  end
 end
 
 def existing_record_ids(table)
