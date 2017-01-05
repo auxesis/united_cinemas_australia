@@ -4,6 +4,18 @@ require 'active_support'
 require 'active_support/core_ext'
 require 'pry'
 require 'reverse_markdown'
+require 'active_support/values/time_zone'
+require 'timezone'
+
+begin
+  Timezone::Lookup.config(:google) do |c|
+    c.api_key = ENV['MORPH_GOOGLE_API_KEY']
+  end
+rescue Timezone::Error::InvalidConfig
+  puts "[info] You need to set MORPH_GOOGLE_API_KEY."
+  puts "[info] Exiting!"
+  exit(1)
+end
 
 class String
   def scrub
@@ -16,14 +28,25 @@ def get(url)
   @agent.get(url)
 end
 
-def existing_record_ids
+def existing_record_ids(table)
   return @cached if @cached
-  @cached = ScraperWiki.select('link from data').map {|r| r['link']}
+  @cached = ScraperWiki.select("link from #{table}").map {|r| r['link']}
 rescue SqliteMagic::NoSuchTable
   []
 end
 
-def cinemas
+def geocode(cinema)
+  # FIXME(auxesis): add address details
+  page = get(cinema['link'])
+  script = page.search('script').find {|s| s.text =~ /google.maps.LatLng/ }.text
+  script.gsub("\r","\n")[/LatLng\((.*)\)\;/, 1].split(',').map(&:to_f)
+end
+
+def timezone_from_location(lat,lng)
+  Timezone.lookup(lat,lng).name
+end
+
+def current_cinema_list
   return @cinemas if @cinemas
 
   @cinemas ||= []
@@ -72,14 +95,16 @@ def extract_sessions(page)
 end
 
 
-def fetch_sessions(id, date)
+def scrape_sessions(cinema, date)
+  id  = cinema['id']
   url = "http://www.unitedcinemas.com.au/session_data.php?date=#{date}&l=#{id}&sort=title"
   page = get(url)
 
   sessions = extract_sessions(page)
   sessions.each do |session|
+    Time.zone = cinema['timezone']
+    session['time'] = Time.zone.parse("#{date} #{session['time']}")
     session['location'] = id
-    session['datetime'] = DateTime.parse(date + ' ' + session.delete('time'))
   end
 end
 
@@ -91,25 +116,46 @@ def primary_key
   %w(link)
 end
 
+def scrape_cinemas
+  cinemas = current_cinema_list
+  puts "[info] Scraped #{cinemas.size} cinemas"
+  puts "[info] There are #{existing_record_ids('cinemas').size} existing cinemas"
+  new_cinemas = cinemas.select {|r| !existing_record_ids('cinemas').include?(r['link'])}
+  puts "[info] There are #{new_cinemas.size} new cinemas"
+
+  new_cinemas.map! do |cinema|
+    puts "[debug] Geocoding #{cinema['name']}"
+    lat, lng = geocode(cinema)
+    timezone = timezone_from_location(lat,lng)
+    cinema.merge({'lat' => lat, 'lng' => lng, 'timezone' => timezone})
+  end
+
+  ScraperWiki.save_sqlite(%w(id), new_cinemas, 'cinemas')
+
+  # Then return all records, regardless if new or old
+  ScraperWiki.select('* from cinemas')
+end
+
 def main
+  cinemas = scrape_cinemas
+
   sessions = []
 
   cinemas.each do |cinema|
     dates.each do |date|
-      puts "### Fetching sessions for #{cinema['name']} on #{date}"
-      sessions += fetch_sessions(cinema['id'], date)
+      puts "[info] Fetching sessions for #{cinema['name']} on #{date}"
+      sessions += scrape_sessions(cinema, date)
     end
   end
 
-  puts "### Scraped #{sessions.size} sessions across #{cinemas.size} cinemas"
-  puts "### There are #{existing_record_ids.size} existing sessions"
-  new_sessions = sessions.select {|r| !existing_record_ids.include?(r['link'])}
-  puts "### There are #{new_sessions.size} new sessions"
+  puts "[info] Scraped #{sessions.size} sessions across #{cinemas.size} cinemas"
+  puts "[info] There are #{existing_record_ids('sessions').size} existing sessions"
+  new_sessions = sessions.select {|r| !existing_record_ids('sessions').include?(r['link'])}
+  puts "[info] There are #{new_sessions.size} new sessions"
 
-  # Serialise
-  ScraperWiki.save_sqlite(primary_key, new_sessions)
+  ScraperWiki.save_sqlite(%w(link), new_sessions, 'sessions')
 
-  puts 'Done'
+  puts '[info] Done'
 end
 
 main()

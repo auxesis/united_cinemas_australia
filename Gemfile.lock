@@ -53,6 +53,7 @@ GEM
     sqlite_magic (0.0.3)
       sqlite3
     thread_safe (0.3.5)
+    timezone (1.2.4)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     unf (0.1.4)
@@ -69,6 +70,7 @@ DEPENDENCIES
   pry
   reverse_markdown
   scraperwiki!
+  timezone
 
 RUBY VERSION
    ruby 2.3.1p112
