@@ -177,12 +177,23 @@ def main
 
   sessions = []
   threads = []
+  queue = Queue.new
 
   cinemas.each do |cinema|
+    dates.each do |date|
+      queue << [ cinema, date ]
+    end
+  end
+
+  10.times do
     threads << Thread.new {
-      dates.each do |date|
-        puts "[info] Fetching sessions for #{cinema['name']} on #{date}"
-        sessions += scrape_sessions(cinema, date)
+      begin
+        while job = queue.pop(true) do
+          cinema, date = job
+          puts "[info] Fetching sessions for #{cinema['name']} on #{date}"
+          sessions += scrape_sessions(cinema, date)
+        end
+      rescue ThreadError
       end
     }
   end
