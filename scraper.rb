@@ -84,12 +84,10 @@ end
 def current_cinema_list
   return @cinemas if @cinemas
 
-  @cinemas ||= []
-
   page = get("http://www.unitedcinemas.com.au/session-times")
 
   cinema_links = page.search('ul.nav.navbar-nav li.dropdown a').find { |a|
-    a.text =~ /Session Times/
+    a.text =~ /Locations/
   }.parent.search('ul li a')
 
   @cinemas = cinema_links.map {|a|
