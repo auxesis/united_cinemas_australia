@@ -157,7 +157,7 @@ def scrape_cinemas
   puts "[info] There are #{existing_record_ids('cinemas').size} existing cinemas"
   new_cinemas = cinemas.select {|r| !existing_record_ids('cinemas').include?(r['link'])}
   puts "[info] Ignoring 'McGrath Hill' because it's currently broken"
-  new_cinemas.reject! { |r| r['link'] =~ /mcgrath/i }
+  new_cinemas.reject! { |r| r['link'] =~ /McGraths Hill$/ }
   puts "[info] There are #{new_cinemas.size} new cinemas"
 
   new_cinemas.each do |cinema|
