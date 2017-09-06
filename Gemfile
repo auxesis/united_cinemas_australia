@@ -6,8 +6,8 @@ gem 'mechanize'
 gem 'activesupport'
 gem 'reverse_markdown'
 gem 'timezone'
+gem 'dotenv'
 
 group :development do
-  gem 'dotenv'
   gem 'pry'
 end
