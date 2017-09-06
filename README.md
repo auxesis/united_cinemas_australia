@@ -14,13 +14,16 @@ cd united_cinemas_australia
 bundle install
 ```
 
-Ensure you enable the [Google Maps Time Zone API](https://console.developers.google.com/apis/api/timezone_backend/overview).
-
-Then get yourself a [Google Maps API key](https://console.developers.google.com/apis/credentials), and export it:
+Set up `.env`:
 
 ```
-export MORPH_GOOGLE_API_KEY=AIabSguDVmM6dxBHEeBGM-AN1z8R9p9xBG4t102q
+cp .env.example .env
 ```
+
+To set `MORPH_GOOGLE_API_KEY`:
+
+- Ensure you enable the [Google Maps Time Zone API](https://console.developers.google.com/apis/api/timezone_backend/overview).
+- Then get yourself a [Google Maps API key](https://console.developers.google.com/apis/credentials),
 
 Then run the scraper:
 

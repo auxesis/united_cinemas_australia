@@ -6,6 +6,8 @@ require 'pry'
 require 'reverse_markdown'
 require 'active_support/values/time_zone'
 require 'timezone'
+require 'dotenv'
+Dotenv.load
 
 begin
   Timezone::Lookup.config(:google) do |c|

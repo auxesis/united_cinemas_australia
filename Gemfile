@@ -7,3 +7,7 @@ gem 'pry'
 gem 'activesupport'
 gem 'reverse_markdown'
 gem 'timezone'
+
+group :development do
+  gem 'dotenv'
+end
